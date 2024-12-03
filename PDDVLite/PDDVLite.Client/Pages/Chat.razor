@@ -1,0 +1,72 @@
+﻿@page "/chat"
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+<PageTitle>Chat</PageTitle>
+
+<div class="form-group">
+    <label>
+        User:
+        <input @bind="userInput" />
+    </label>
+</div>
+<div class="form-group">
+    <label>
+        Message:
+        <input @bind="messageInput" size="50" />
+    </label>
+</div>
+<button @onclick="Send" disabled="@(!IsConnected)">Send</button>
+
+<hr>
+
+<ul id="messagesList">
+    @foreach (var message in messages)
+    {
+        <li>@message</li>
+    }
+</ul>
+
+@code {
+    private HubConnection? hubConnection;//Add Param for connection to hub
+    private List<string> messages = [];
+    //I don't add Db, that's why i used this param. It's mean that data added in real time, and user who already lost some messages can't get it anymore
+    private string? userInput;
+    private string? messageInput;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()//Create Connection
+            .WithUrl(Navigation.ToAbsoluteUri("/chathub"))//Create link with chathub uri.Pair hub+Uri is writed in program.cs
+            .Build();
+
+        hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+        {
+            var encodedMsg = $"{user}: {message}";
+            messages.Add(encodedMsg);
+            InvokeAsync(StateHasChanged);
+        });//When Receive any messages try to encode it, save in messages, update page
+
+        await hubConnection.StartAsync();//Start RealTime-work
+    }
+
+    private async Task Send()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.SendAsync("SendMessage", userInput, messageInput);
+        }
+    }//On Button click => Send Data into Hub
+
+    public bool IsConnected =>
+        hubConnection?.State == HubConnectionState.Connected;//Needed for disable button if connection can't be establish
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }//Dispose object after work Done
+}

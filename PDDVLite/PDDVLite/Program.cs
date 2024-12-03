@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using PDDVLite.Client.Pages;
 using PDDVLite.Components;
 using PDDVLite.Components.Account;
+using PDDVLite.Components.Hubs;
 using PDDVLite.Data;
 
 
@@ -22,7 +23,12 @@ namespace PDDVLite
                 .AddInteractiveServerComponents()
                 .AddInteractiveWebAssemblyComponents();
 
-            
+            builder.Services.AddSignalR();
+            builder.Services.AddResponseCompression(opts =>
+            {
+                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+                    ["application/octet-stream"]);
+            });
 
             builder.Services.AddCascadingAuthenticationState();
             builder.Services.AddScoped<IdentityUserAccessor>();
@@ -50,7 +56,7 @@ namespace PDDVLite
 
             var app = builder.Build();
 
-            
+            app.UseResponseCompression();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -78,6 +84,7 @@ namespace PDDVLite
 
             // Add additional endpoints required by the Identity /Account Razor components.
             app.MapAdditionalIdentityEndpoints();
+            app.MapHub<ChatHub>("/chathub");
 
             app.Run();
         }
