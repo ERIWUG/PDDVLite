@@ -1,9 +1,9 @@
-﻿@page "/chat"
+﻿@page "/teacher"
 @using Microsoft.AspNetCore.SignalR.Client
 @inject NavigationManager Navigation
 @implements IAsyncDisposable
 
-<PageTitle>Chat</PageTitle>
+<PageTitle>Teacher</PageTitle>
 
 <div class="form-group">
     <label>
@@ -19,27 +19,11 @@
 </div>
 
 
-<div class="form-group">
-    <label>
-        Message:
-        <input @bind="messageInput" size="50" />
-    </label>
-    <button @onclick="Send" disabled="@(!IsConnected)">Send</button>
+<div class="FormMy">
+    <input @bind="TextPrompt"></input>
 </div>
 
 
-<div class="form-group">
-    <label>
-        MessageToGroup:
-        <input @bind="messageGroup" size="50" />
-    </label>
-    <label>
-        Message:
-        <input @bind="messageGroupInput" size="50" />
-    </label>
-    <button @onclick="SendToGroup" disabled="@(!IsConnected)">Send</button>
-
-</div>
 
 
 
@@ -61,6 +45,7 @@
     private string? userGroup;
     private string? messageGroup;
     private string? messageGroupInput;
+    private string? TextPrompt;
 
 
 
@@ -69,12 +54,7 @@
         hubConnection = new HubConnectionBuilder()//Create Connection
             .WithUrl(Navigation.ToAbsoluteUri("/chathub"))//Create link with chathub uri.Pair hub+Uri is writed in program.cs
             .Build();
-        hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
-        {
-            var encodedMsg = $"{user}: {message}";
-            messages.Add(encodedMsg);
-            InvokeAsync(StateHasChanged);
-        });//When Receive any messages try to encode it, save in messages, update page
+
 
         hubConnection.On<string>("Text", (message) =>
         {
@@ -82,21 +62,15 @@
             InvokeAsync(StateHasChanged);
         });
 
-        hubConnection.On<string, string, string>("TextGroup", (texttext, user, message) =>
-        {
-            messages.Add($"{texttext}:{user}:{message}");
+        hubConnection.On<string>("StudentTask",(message) =>{
+            TextPrompt = message;
             InvokeAsync(StateHasChanged);
         });
+
         await hubConnection.StartAsync();//Start RealTime-work
     }
 
-    private async Task Send()
-    {
-        if (hubConnection is not null)
-        {
-            await hubConnection.SendAsync("SendMessage", userInput, messageInput);
-        }
-    }//On Button click => Send Data into Hub
+   
 
     private async Task AddGroup()
     {
@@ -106,13 +80,7 @@
         }
     }
 
-    private async Task SendToGroup()
-    {
-        if (hubConnection is not null && userGroup is not null)
-        {
-            await hubConnection.SendAsync("SendToGroup", userInput,messageGroup,messageGroupInput);
-        }
-    }
+    
 
     public bool IsConnected =>
         hubConnection?.State == HubConnectionState.Connected;//Needed for disable button if connection can't be establish

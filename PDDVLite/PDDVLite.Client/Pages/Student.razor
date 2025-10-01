@@ -1,0 +1,83 @@
+﻿@page "/student"
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+<PageTitle>Chat</PageTitle>
+
+<div class="form-group">
+    <label>
+        User:
+        <input @bind="userInput" />
+    </label>
+    <label>
+        Group:
+        <input @bind="userGroup" />
+        <button @onclick="AddGroup" disabled="@(!IsConnected)">Add Group</button>
+    </label>
+
+</div>
+
+
+<div class="FormMy">
+    <input type="text" @bind="TextPrompt" @oninput="SendValue"></input>
+</div>
+
+
+
+<br>
+
+@code {
+    private HubConnection? hubConnection;//Add Param for connection to hub
+
+    //I don't add Db, that's why i used this param. It's mean that data added in real time, and user who already lost some messages can't get it anymore
+    private string? userInput;
+    private string? TextPrompt;
+    private string? userGroup;
+
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()//Create Connection
+            .WithUrl(Navigation.ToAbsoluteUri("/chathub"))//Create link with chathub uri.Pair hub+Uri is writed in program.cs
+            .Build();
+
+        await hubConnection.StartAsync();//Start RealTime-work
+    }
+
+
+
+    private async Task AddGroup()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.SendAsync("AddUserToGroup", userInput, userGroup);
+        }
+    }
+
+    private async Task SendValue(ChangeEventArgs e)
+    {
+        TextPrompt = e.Value.ToString();
+
+        if (hubConnection is not null)
+        {
+            await hubConnection.SendAsync("ValueChange", TextPrompt);
+        }
+        
+    }
+
+   
+
+    public bool IsConnected =>
+        hubConnection?.State == HubConnectionState.Connected;//Needed for disable button if connection can't be establish
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }//Dispose object after work Done
+}
