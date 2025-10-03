@@ -12,7 +12,7 @@ namespace PDDVLite.Components.Hubs
 
         public async Task AddUserToGroup(string user, string group) {
             await Groups.AddToGroupAsync(Context.ConnectionId, group);
-            await Clients.All.SendAsync("Text",$"Пользователь {user} вошел в группу {group}");
+            await Clients.All.SendAsync("Text",$"Пользователь {user} вошел в группу {group},{Context.User}");
         }
 
         public async Task SendToGroup(string user, string group, string message)
@@ -25,6 +25,18 @@ namespace PDDVLite.Components.Hubs
             await Clients.Group("Teacher").SendAsync("StudentTask", newValue);
         
         }
+
+        public async Task RadioValueChange(string newValue)
+        {
+            await Clients.Group("Teacher").SendAsync("Text", "HELLO!");
+            await Clients.Group("Teacher").SendAsync("StudentRadioChange", newValue);
+        }
+
+        public async Task RedirectStudent(string loginUser)
+        {
+            await Clients.User(loginUser).SendAsync("RedirectStud","login");
+        }
+
 
        
     }

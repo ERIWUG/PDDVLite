@@ -2,12 +2,14 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.ResponseCompression;
-
 using PDDVLite.Client.Pages;
 using PDDVLite.Components;
 using PDDVLite.Components.Account;
 using PDDVLite.Components.Hubs;
 using PDDVLite.Data;
+using PDDVLite.Components.Roles;
+using Microsoft.AspNetCore.SignalR;
+using PDDVLite.Components.Services;
 
 
 namespace PDDVLite
@@ -34,6 +36,7 @@ namespace PDDVLite
             builder.Services.AddScoped<IdentityUserAccessor>();
             builder.Services.AddScoped<IdentityRedirectManager>();
             builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
+           
 
             builder.Services.AddAuthentication(options =>
                 {
@@ -48,11 +51,14 @@ namespace PDDVLite
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
             builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+                .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddSignInManager()
                 .AddDefaultTokenProviders();
 
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+            builder.Services.AddScoped<IRoleService, RoleService>();
+            builder.Services.AddSingleton<IUserIdProvider, UserProviderService>();
 
             var app = builder.Build();
 

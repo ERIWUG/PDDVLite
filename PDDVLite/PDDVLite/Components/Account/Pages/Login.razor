@@ -3,6 +3,7 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
+@using PDDVLite.Components.Roles
 @using PDDVLite.Data
 
 @inject SignInManager<ApplicationUser> SignInManager
@@ -10,9 +11,17 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
+@inject IRoleService roleService
+
 <PageTitle>Log in</PageTitle>
 
 <h1>Log in</h1>
+
+<input @bind-value = "roleName"></input>
+
+<button @onclick="CreateNewRole">CLICK</button>
+
+
 <div class="row">
     <div class="col-md-4">
         <section>
@@ -65,6 +74,15 @@
 </div>
 
 @code {
+    private string? roleName;
+    public async Task CreateNewRole()
+    {
+        roleName = "Admin";
+        await InvokeAsync(StateHasChanged);
+        
+    }
+
+
     private string? errorMessage;
 
     [CascadingParameter]

@@ -14,8 +14,20 @@
         Group:
         <input @bind="userGroup" />
         <button @onclick="AddGroup" disabled="@(!IsConnected)">Add Group</button>
+       
     </label>
 
+</div>
+
+<div>
+    <InputRadioGroup @bind-Value="SubjectChoise" @bind-Value:after = "RadioValueChange" >
+        @foreach (string field in names)
+        {
+            <InputRadio Value="field" />
+        
+            <label>@field</label>
+        }
+    </InputRadioGroup>
 </div>
 
 
@@ -34,6 +46,9 @@
     private string? userInput;
     private string? TextPrompt;
     private string? userGroup;
+    private string? SubjectChoise;
+
+    private string[] names = ["Math", "Science", "Physics"];
 
 
 
@@ -44,9 +59,13 @@
             .WithUrl(Navigation.ToAbsoluteUri("/chathub"))//Create link with chathub uri.Pair hub+Uri is writed in program.cs
             .Build();
 
+        hubConnection.On<string>("RedirectStud", (Destination) =>
+        {
+            Navigation.NavigateTo($"/", forceLoad: true);
+        });
+
         await hubConnection.StartAsync();//Start RealTime-work
     }
-
 
 
     private async Task AddGroup()
@@ -60,12 +79,18 @@
     private async Task SendValue(ChangeEventArgs e)
     {
         TextPrompt = e.Value.ToString();
-
         if (hubConnection is not null)
         {
             await hubConnection.SendAsync("ValueChange", TextPrompt);
         }
-        
+
+    }
+    private async Task RadioValueChange()
+    {
+        if(hubConnection is not null)
+        {
+            await hubConnection.SendAsync("RadioValueChange",SubjectChoise);
+        }
     }
 
    

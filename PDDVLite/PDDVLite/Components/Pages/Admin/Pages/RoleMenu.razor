@@ -1,0 +1,29 @@
+﻿@page "/Admin/rolemenu"
+@using PDDVLite.Components.Roles
+@inject IRoleService roleService
+
+<input @bind-value = "RoleName"/>
+<button @onclick="CreateNewRole"></button>
+
+<h3>RoleMenu</h3>
+
+@code {
+    public string? RoleName;
+
+
+    public async Task CreateNewRole()
+    {
+        RoleName = "Admin";
+
+
+
+        // if (!string.IsNullOrEmpty(RoleName))
+        // {
+        //     var reslt = await roleService.CreateRoleAsync(RoleName);
+        //     RoleName ="MEW!";
+        //     await InvokeAsync(StateHasChanged);
+        // }
+        InvokeAsync(StateHasChanged);
+    }
+
+}

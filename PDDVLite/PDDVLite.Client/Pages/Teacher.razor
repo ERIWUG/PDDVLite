@@ -18,10 +18,28 @@
 
 </div>
 
+<div>
+    <InputRadioGroup @bind-Value="SubjectChoise">
+        @foreach (string field in names)
+        {
+            <InputRadio Value="field" />
+
+            <label>@field</label>
+        }
+    </InputRadioGroup>
+</div>
 
 <div class="FormMy">
     <input @bind="TextPrompt"></input>
 </div>
+
+
+<div class="RedirectStudent">
+    <input @bind-value="ContextId"></input>
+    <button @onclick = "RedirectStudent" ></button>
+
+</div>
+
 
 
 
@@ -46,6 +64,10 @@
     private string? messageGroup;
     private string? messageGroupInput;
     private string? TextPrompt;
+    private string? ContextId;
+
+    private string? SubjectChoise;
+    private string[] names = ["Math", "Science", "Physics"];
 
 
 
@@ -67,10 +89,16 @@
             InvokeAsync(StateHasChanged);
         });
 
+        hubConnection.On<string>("StudentRadioChange", (message) =>
+        {
+            SubjectChoise = message;
+            InvokeAsync(StateHasChanged);
+        });
+
         await hubConnection.StartAsync();//Start RealTime-work
     }
 
-   
+
 
     private async Task AddGroup()
     {
@@ -80,7 +108,15 @@
         }
     }
 
-    
+
+    private async Task RedirectStudent()
+    {
+        if(hubConnection is not null)
+        {
+            await hubConnection.SendAsync("RedirectStudent",ContextId);
+        }
+    }
+
 
     public bool IsConnected =>
         hubConnection?.State == HubConnectionState.Connected;//Needed for disable button if connection can't be establish
